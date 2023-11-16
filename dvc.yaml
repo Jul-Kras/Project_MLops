@@ -26,11 +26,29 @@ stages:
     - data/stage3/train.csv
     - scripts/data_processing/train_test_split.py
     params:
-    - split.split_ratio
+    - params.yaml:
+      - split.split_ratio
     outs:
     - data/stage4
   train:
-    cmd: train.max_depth -d scripts/model_learning/dt.py -d data/stage4/train.csv
-      -o model.pkl python3 scripts/model_learning/dt.py data/stage4/train.csv model.pkl
+    cmd: python3 scripts/model_learning/dt.py data/stage4/train.csv model.pkl
+    deps:
+    - data/stage4/train.csv
+    - scripts/model_learning/dt.py
     params:
+    - train.max_depth
     - train.seed
+    outs:
+    - models/current/model.pkl
+  evaluate:
+    cmd: python3 scripts/model_learning/evaluate.py data/stage4/test.csv models/current/model.pkl
+    deps:
+    - data/stage4/test.csv
+    - models/current/model.pkl
+    - scripts/model_learning/evaluate.py
+    params:
+    - train.max_depth
+    - train.seed
+    metrics:
+    - eval/metrics.json:
+        cache: false
